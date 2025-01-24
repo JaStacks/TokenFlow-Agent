@@ -9,12 +9,15 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@datastructures-js/deque": "^1.0.4",
     "@openserv-labs/sdk": "latest",
     "axios": "^1.7.9",
+    "collections": "^5.1.13",
     "dotenv": "^16.4.7",
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@types/collections": "^5.1.5",
     "@types/node": "^22.10.7",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3"
