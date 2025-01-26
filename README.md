@@ -1,92 +1,64 @@
-# Agent Starter
+# DexScreener Token Analytics Agent
 
-A starter project to help you get started with [OpenServ Labs SDK](https://github.com/openserv-labs/sdk) - a powerful TypeScript framework for building non-deterministic AI agents with advanced cognitive capabilities.
+An autonomous AI agent that provides real-time token analytics using DexScreener's API.
 
-This starter provides a minimal setup to help you understand the basics of the SDK. For more advanced features like tasks, file operations, and inter-agent collaboration, check out the [SDK documentation](https://github.com/openserv-labs/sdk).
+## Features
 
-## Setup
+- Filter tokens by various criteria:
+  - Trading volume
+  - Market capitalization
+  - Liquidity
+  - Token age
+  - Blockchain (Solana, Ethereum, BSC, etc.)
+- Real-time data from DexScreener
+- Formatted output with key metrics
+- Natural language interface
 
-1. Clone this repository
-2. Install dependencies:
+## Capabilities
 
-```bash
-npm install
+### filterTokens
+
+Filter tokens based on specific criteria:
+
+- `chain` - Filter tokens by blockchain (e.g., "solana", "ethereum", "bsc")
+- `minVolume24h` - Minimum 24-hour trading volume in USD
+- `minLiquidity` - Minimum liquidity in USD
+- `minMarketCap` - Minimum market capitalization in USD
+- `maxMarketCap` - Maximum market capitalization in USD
+- `maxAgeDays` - Maximum age of the token pair in days
+
+## Example Queries
+
+```
+"Show me tokens with >$1M 24h volume and market cap between $1M-$25M"
+"List tokens on Solana with >$2000 liquidity created in the last 30 days"
+"Find tokens with >$10M market cap and positive 24h price change"
 ```
 
-3. Copy `.env.example` to `.env` and fill in your configuration:
+## API Reference
 
-```bash
-cp .env.example .env
+The agent uses DexScreener's API endpoints:
+
+- `/token-boosts/top/v1`: Get top boosted tokens
+- `/latest/dex/tokens/{address}`: Get detailed token information
+
+## Output Format
+
+For each token that matches the criteria, the agent returns:
+
+```json
+{
+  "name": "Token Name",
+  "symbol": "TKN",
+  "chain": "blockchain",
+  "dex": "exchange",
+  "price": "$0.123456",
+  "marketCap": "$1,234,567",
+  "volume24h": "$123,456",
+  "priceChange24h": "12.34%",
+  "age": "7 days",
+  "website": "https://token-website.com",
+  "twitter": "https://twitter.com/token",
+  "dexScreenerUrl": "https://dexscreener.com/..."
+}
 ```
-
-4. Update the environment variables in `.env`:
-   - `OPENSERV_API_KEY`: Your OpenServ Labs API key
-
-## Example Agent
-
-The starter includes a simple example agent that can perform basic arithmetic:
-
-```typescript
-// Example usage
-const response = await agent.process({
-  messages: [
-    {
-      role: 'user',
-      content: 'add 13 and 29'
-    }
-  ]
-})
-```
-
-## Development
-
-Run the development server with hot reload:
-
-```bash
-npm run dev
-```
-
-## Code Quality
-
-The project uses ESLint and Prettier for code quality and formatting:
-
-```bash
-# Run ESLint
-npm run lint
-
-# Fix ESLint issues
-npm run lint:fix
-
-# Format code with Prettier
-npm run format
-```
-
-## Building
-
-Build the project:
-
-```bash
-npm run build
-```
-
-Run the built version:
-
-```bash
-npm start
-```
-
-## Notes
-
-- The project is set up with TypeScript, ts-node-dev for development, and includes VS Code debugging configuration
-- Environment variables are validated using Zod
-- ESLint and Prettier are configured for consistent code style
-- The agent uses natural language processing to understand and execute commands
-
-## Next Steps
-
-Once you're comfortable with the basics, explore more advanced features in the [OpenServ Labs SDK](https://github.com/openserv-labs/sdk):
-- Tasks and workflows
-- Chat interactions
-- File operations
-- Custom capabilities
-- Inter-agent collaboration
