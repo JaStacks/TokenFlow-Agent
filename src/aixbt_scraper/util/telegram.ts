@@ -1,34 +1,45 @@
-import axios from 'axios';
+import { env } from "process";
+import { agent, createTask } from "..";
+const TelegramBot = require('node-telegram-bot-api');
 
-const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}`;
+// Initialize the Telegram bot
+export const bot = new TelegramBot(env.TELEGRAM_BOT_TOKEN, { polling: true });
 
-export async function joinTelegramGroup(inviteLink: string): Promise<void> {
-  try {
-    const response = await axios.post(`${TELEGRAM_API_URL}/joinChat`, {
-      invite_link: inviteLink,
-    });
+export function startTelegramBot() {
+  console.log('Starting Telegram bot...');
 
-    if (response.data.ok) {
-      console.log('Successfully joined Telegram group.');
-    } else {
-      throw new Error(`Failed to join Telegram group: ${response.data.description}`);
+  // Handle incoming messages
+  bot.on('message', async (msg) => {
+    const chatId = msg.chat.id;
+    const messageText = msg.text?.trim() || '';
+
+    // Basic command structure
+    if (messageText.startsWith('/fetch')) {
+      const taskDetails = messageText.replace('/task', '').trim();
+
+      if (!taskDetails) {
+        bot.sendMessage(chatId, 'Please provide task details after the /task command.');
+        return;
+      }
+
+      try {
+
+        const response = await createTask(taskDetails, chatId);
+
+        bot.sendMessage(chatId, `Task created successfully! Task ID: ${response.id}`);
+      } catch (error) {
+        console.error('Error creating task:', error);
+        bot.sendMessage(chatId, 'Failed to create task. Please try again.');
+      }
     }
-  } catch (error) {
-    console.error('Error joining Telegram group:', error);
-    throw error;
-  }
-}
+  });
 
-export async function sendTelegramMessage(chatId: string, message: string): Promise<void> {
-  try {
-    await axios.post(`${TELEGRAM_API_URL}/sendMessage`, {
-      chat_id: chatId,
-      text: message,
-      parse_mode: 'Markdown',
-    });
-    console.log('Message sent to Telegram successfully.');
-  } catch (error) {
-    console.error('Error sending message to Telegram:', error);
-    throw error;
-  }
+  // Error handling for the bot
+  bot.on('error', (error) => {
+    console.error('Telegram bot error:', error);
+  });
+
+  bot.on('polling_error', (error) => {
+    console.error('Telegram polling error:', error);
+  });
 }

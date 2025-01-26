@@ -14,11 +14,13 @@
     "axios": "^1.7.9",
     "collections": "^5.1.13",
     "dotenv": "^16.4.7",
+    "node-telegram-bot-api": "^0.66.0",
     "zod": "^3.24.1"
   },
   "devDependencies": {
     "@types/collections": "^5.1.5",
     "@types/node": "^22.10.7",
+    "@types/node-telegram-bot-api": "^0.64.7",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.7.3"
   }

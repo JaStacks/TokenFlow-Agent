@@ -1,3 +1,6 @@
+#Custom file
+tweets_output.json
+
 # Logs
 logs
 *.log

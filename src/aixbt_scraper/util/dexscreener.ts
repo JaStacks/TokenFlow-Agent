@@ -59,9 +59,11 @@ export async function getBestProjectMatch(ticker: string) {
       project.volume24h > max.volume24h ? project : max
     );
 
-    console.log(`Best project for ticker ${ticker}:`, bestProject);
-
-    return JSON.stringify(bestProject);
+    if (bestProject && bestProject?.baseTokenSymbol.toLowerCase() === ticker.toLowerCase()) {
+      return bestProject;
+    } else {
+      return null;
+    }
   } catch (error) {
     console.error(`Error fetching project data for ticker ${ticker}:`, error);
     return null;
