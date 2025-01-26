@@ -24,13 +24,87 @@ export function convertToTelegramMarkdown(text: string): string {
   );
 }
 
+export function generateReport(data: any[]): string[] {
+  const MAX_TELEGRAM_MESSAGE_LENGTH = 4096;
+
+  const individualReports = data.map((token) => {
+    const {
+      tweetText,
+      dexScreenerLink,
+      projectTwitterLink,
+      projectTelegramLink,
+      projectWebsites,
+      baseTokenName,
+      baseTokenSymbol,
+      chainId,
+      dexId,
+      liquidity,
+      priceUsd,
+      volume24h,
+    } = token;
+
+    const socialMediaLinks = [
+      projectTwitterLink ? `• Twitter: [Link](${projectTwitterLink})` : null,
+      projectTelegramLink ? `• Telegram: [Link](${projectTelegramLink})` : null,
+    ]
+      .filter(Boolean)
+      .join('\n') || '_No social links available_';
+
+    const websites = projectWebsites
+      ? projectWebsites.map((url) => `• [${url}](${url})`).join('\n')
+      : '_No websites available_';
+
+    // Generate the token report
+    const tokenReport = `*${baseTokenName} (${baseTokenSymbol})* 📊
+
+*Tweet*: "${tweetText}"
+
+🔍 *Market Data*:
+• Chain: ${chainId}
+• DEX: ${dexId}
+• Liquidity: ${liquidity}
+• Price (USD): ${priceUsd}
+• 24H Volume: ${volume24h}
+
+💹 *Social Media Links*:
+${socialMediaLinks}
+
+🌐 *Websites*:
+${websites}
+
+🔗 *DexScreener Link*: [View on DexScreener](${dexScreenerLink})`;
+
+    return convertToTelegramMarkdown(tokenReport); // Escape the entire token report
+  });
+
+  // Split combined reports into chunks
+  const chunks: string[] = [];
+  let currentChunk = '';
+
+  for (const report of individualReports) {
+    if (currentChunk.length + report.length + 5 > MAX_TELEGRAM_MESSAGE_LENGTH) {
+      chunks.push(currentChunk.trim());
+      currentChunk = '';
+    }
+    currentChunk += `${report}\n\n---\n\n`;
+  }
+
+  if (currentChunk) {
+    chunks.push(currentChunk.trim());
+  }
+
+  return chunks;
+}
+
+
+
 /**
  * Extract tickers from text
  */
 export function extractTickers(text: string): string[] {
   const matches = text.match(/\$[A-Za-z][A-Za-z0-9]*/g);
   return matches ? matches.map((match) => match.slice(1)) : [];
-}
+};
 
 /**
  * Prune Deque by timestamp
@@ -54,71 +128,4 @@ export function pruneDeque(deque: Deque<any>) {
     console.error(`Error in pruneDeque: ${error.message}`);
     throw error;
   }
-}
-
-/**
- * Generate a formatted report for Telegram
- */
-export function generateReport(data: any[]): string {
-  return data
-    .map((token) => {
-      const {
-        tweetText,
-        dexScreenerLink,
-        projectTwitterLink,
-        projectTelegramLink,
-        projectWebsites,
-        baseTokenName,
-        baseTokenSymbol,
-        chainId,
-        dexId,
-        liquidity,
-        priceUsd,
-        volume24h,
-      } = token;
-
-      const socialMediaLinks = [
-        projectTwitterLink ? `• Twitter: [Link](${projectTwitterLink})` : null,
-        projectTelegramLink ? `• Telegram: [Link](${projectTelegramLink})` : null,
-      ]
-        .filter(Boolean)
-        .join('\n') || '_No social links available_';
-
-      const websites = projectWebsites
-        ? projectWebsites.map((url) => `• [${url}](${url})`).join('\n')
-        : '_No websites available_';
-
-      return `*${baseTokenName} (${baseTokenSymbol})* 📊
-
-*Tweet*: "${tweetText}"
-
-🔍 *Market Data*:
-• Chain: ${chainId}
-• DEX: ${dexId}
-• Liquidity: ${liquidity}
-• Price (USD): ${priceUsd}
-• 24H Volume: ${volume24h}
-
-💹 *Social Media Links*:
-${socialMediaLinks}
-
-🌐 *Websites*:
-${websites}
-
-🔗 *DexScreener Link*: [View on DexScreener](${dexScreenerLink})`;
-    })
-    .join('\n\n---\n\n');
-}
-
-/**
- * Format key-value pairs into a Markdown bullet list
- */
-function formatKeyValuePairs(data: Record<string, string> | null): string {
-  if (!data || Object.keys(data).length === 0) {
-    return '_No data available_';
-  }
-
-  return Object.entries(data)
-    .map(([key, value]) => `• *${key}:* ${value}`)
-    .join('\n');
-}
+};

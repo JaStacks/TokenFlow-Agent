@@ -1,11 +1,7 @@
 import 'dotenv/config';
 import { Agent } from '@openserv-labs/sdk';
 import { z } from 'zod';
-import axios, { all } from 'axios';
-import * as fs from 'fs';
-import path from 'path';
 import { getBestProjectMatch, getProjectLinks } from './util/dexscreener';
-import { formatMessage } from './util/formatter';
 import { convertToTelegramMarkdown, extractTickers, generateReport, pruneDeque } from './util/helper_functions';
 import { loadDequeFromWorkspace, loadState, saveDequeToWorkspace, saveState } from './util/stateUtils';
 import { fetchTweets, fetchTweetsInRange } from './util/twitter';
@@ -240,26 +236,6 @@ agent.addCapability({
   },
 });
 
-// Add the `sendTelegramMessage` capability
-agent.addCapability({
-  name: "sendTelegramMessage",
-  description: "Sends a message to a specific Telegram chat.",
-  schema: z.object({
-    chatId: z.number().describe("The Telegram chat ID to send the message to."),
-    message: z.string().describe("The message content to send."),
-  }),
-  run: async ({ args }) => {
-    try {
-      await bot.sendMessage(args.chatId, args.message);
-      console.log(`Message sent to chat ${args.chatId}: ${args.message}`);
-      return JSON.stringify({ success: true });
-    } catch (error) {
-      console.error(`Error sending message to chat ${args.chatId}:`, error);
-      return { success: false, error: error.message };
-    }
-  },
-});
-
 
 /**
  * Capability for formatting a message
@@ -289,14 +265,41 @@ agent.addCapability({
   }),
   async run({ args }) {
     try {
-      const report = generateReport(args.data);
-      return JSON.stringify({ success: true, message: convertToTelegramMarkdown(report) });
+      // Generate the report using the updated chunking logic
+      const reportChunks = generateReport(args.data);
+      const formattedChunks = reportChunks.map((chunk) => convertToTelegramMarkdown(chunk));
+
+      return JSON.stringify({ success: true, messages: formattedChunks });
     } catch (error) {
       console.error("Error generating report:", error);
       throw new Error("Failed to generate report. Please check the input data.");
     }
   },
 });
+
+
+// Add the `sendTelegramMessage` capability
+agent.addCapability({
+  name: "sendTelegramMessage",
+  description: "Sends a message to a specific Telegram chat.",
+  schema: z.object({
+    chatId: z.number().describe("The Telegram chat ID to send the message to."),
+    messages: z.array(z.string()).describe("The array of message chunks to send."),
+  }),
+  async run({ args }) {
+    try {
+      for (const message of args.messages) {
+        await bot.sendMessage(args.chatId, message);
+      }
+      console.log(`Messages sent to chat ${args.chatId}.`);
+      return JSON.stringify({ success: true });
+    } catch (error) {
+      console.error(`Error sending messages to chat ${args.chatId}:`, error);
+      return { success: false, error: error.message };
+    }
+  },
+});
+
 
 export async function createTask(taskDetails: string, chatId: any): Promise<{ id: number; status: string }> {
   try {
